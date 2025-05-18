@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     PDF_OUTPUT_DIR: str = "toc"
 
     # Performance
-    DEFAULT_THREAD_COUNT: int = max(1, os.cpu_count() - 1) if os.cpu_count() else 2
+    DEFAULT_THREAD_COUNT: int = max(1, (os.cpu_count() or 2) - 1)
 
     class Config:
         case_sensitive = True

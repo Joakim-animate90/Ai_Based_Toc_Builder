@@ -1,6 +1,6 @@
 import base64
 import os
-import fitz  # PyMuPDF
+import fitz  # type: ignore # PyMuPDF
 from concurrent.futures import ThreadPoolExecutor
 from app.utils.decorators import timing_decorator
 

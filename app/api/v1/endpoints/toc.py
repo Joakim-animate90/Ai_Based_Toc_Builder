@@ -1,4 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends, UploadFile, File
+from typing import Optional
 from app.models.schemas import TOCRequest, TOCResponse, HealthResponse
 from app.services.toc_service import TOCService
 
@@ -20,7 +21,7 @@ def health_check():
 async def extract_toc(
     file: UploadFile = File(...),
     request: TOCRequest = Depends(),
-    background_tasks: BackgroundTasks = None,
+    background_tasks: Optional[BackgroundTasks] = None,
     toc_service: TOCService = Depends(get_toc_service),
 ):
     """
@@ -31,7 +32,7 @@ async def extract_toc(
     - **max_pages**: Maximum number of pages to process (default: 10)
     """
     # Validate PDF file upload
-    if not file or not file.filename.lower().endswith(".pdf"):
+    if not file or not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(
             status_code=400, detail="Invalid file: Please upload a PDF document"
         )
