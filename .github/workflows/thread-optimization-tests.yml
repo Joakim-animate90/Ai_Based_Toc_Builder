@@ -24,7 +24,7 @@ jobs:
         test-type: ["unit", "performance"]
     
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -32,7 +32,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       
       - name: Cache pip dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-threads-${{ hashFiles('**/requirements.txt') }}-${{ matrix.python-version }}
@@ -98,7 +98,7 @@ jobs:
       
       - name: Upload benchmark results
         if: matrix.test-type == 'performance'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: thread-benchmark-py${{ matrix.python-version }}
           path: .benchmarks/
@@ -120,7 +120,7 @@ jobs:
       
       - name: Upload comparison report
         if: matrix.test-type == 'performance' && success()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: benchmark-comparison-py${{ matrix.python-version }}
           path: benchmark_report.md

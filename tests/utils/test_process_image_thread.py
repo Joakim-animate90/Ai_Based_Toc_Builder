@@ -78,9 +78,7 @@ def test_convert_pdf_to_base64_images(mock_open, thread_converter):
 
     # Act
     # Mock ThreadPoolExecutor and process_page to simulate conversion
-    with patch(
-        "app.utils.process_image_thread.ThreadPoolExecutor"
-    ), patch.object(
+    with patch("app.utils.process_image_thread.ThreadPoolExecutor"), patch.object(
         thread_converter, "_process_page"
     ) as mock_process_page:
         # Setup process_page to return the expected page number and base64 image

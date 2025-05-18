@@ -39,7 +39,7 @@ def valid_toc_request_dict():
 def mock_pdf_file():
     """Fixture for a mock PDF file upload."""
     # Create a mock PDF content
-    content = b'PDF content'
+    content = b"PDF content"
 
     # Create a mock UploadFile object
     upload_file = MagicMock(spec=UploadFile)
