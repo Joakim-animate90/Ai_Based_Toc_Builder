@@ -232,6 +232,14 @@ def sample_pdf_files():
             pytest.skip("PyMuPDF (fitz) is required for PDF generation")
 
 
+# Import to check if benchmark fixture is available
+try:
+    from pytest_benchmark.fixture import BenchmarkFixture  # noqa: F401
+    BENCHMARK_AVAILABLE = True
+except ImportError:
+    BENCHMARK_AVAILABLE = False
+
+@pytest.mark.skipif(not BENCHMARK_AVAILABLE, reason="pytest-benchmark is not installed")
 @pytest.mark.parametrize(
     "thread_count",
     [(1), (2), (4), (8), (None)],
