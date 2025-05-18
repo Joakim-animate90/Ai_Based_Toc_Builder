@@ -21,7 +21,7 @@ def health_check():
 async def extract_toc(
     file: UploadFile = File(...),
     request: TOCRequest = Depends(),
-    background_tasks: Optional[BackgroundTasks] = None,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
     toc_service: TOCService = Depends(get_toc_service),
 ):
     """
