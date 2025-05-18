@@ -235,9 +235,11 @@ def sample_pdf_files():
 # Import to check if benchmark fixture is available
 try:
     from pytest_benchmark.fixture import BenchmarkFixture  # noqa: F401
+
     BENCHMARK_AVAILABLE = True
 except ImportError:
     BENCHMARK_AVAILABLE = False
+
 
 @pytest.mark.skipif(not BENCHMARK_AVAILABLE, reason="pytest-benchmark is not installed")
 @pytest.mark.parametrize(
