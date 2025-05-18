@@ -19,6 +19,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 # Lifespan setup (introduced in FastAPI 0.95.0+)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,15 +28,16 @@ async def lifespan(app: FastAPI):
     """
     # Startup operations
     logger.info("Starting up the TOC Builder API")
-    
+
     # Add any startup initialization here, like DB connections
-    
+
     yield  # This is where the app runs
-    
+
     # Shutdown operations
     logger.info("Shutting down the TOC Builder API")
-    
+
     # Add any cleanup operations here, like closing DB connections
+
 
 # Create FastAPI application
 app = FastAPI(
@@ -57,6 +59,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Request timing middleware
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
@@ -69,6 +72,7 @@ async def add_process_time_header(request: Request, call_next):
     response.headers["X-Process-Time"] = str(process_time)
     return response
 
+
 # Global exception handler for validation errors
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -77,19 +81,23 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     """
     error_detail: List[Dict] = []
     for error in exc.errors():
-        error_detail.append({
-            "loc": error.get("loc", []),
-            "msg": error.get("msg", ""),
-            "type": error.get("type", "")
-        })
-    
+        error_detail.append(
+            {
+                "loc": error.get("loc", []),
+                "msg": error.get("msg", ""),
+                "type": error.get("type", ""),
+            }
+        )
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": error_detail}
+        content={"detail": error_detail},
     )
+
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
 
 # Root endpoint
 @app.get("/", tags=["root"])
@@ -101,8 +109,9 @@ async def root():
         "service": settings.PROJECT_NAME,
         "version": "1.0.0",
         "status": "active",
-        "docs": "/docs"
+        "docs": "/docs",
     }
+
 
 if __name__ == "__main__":
     """

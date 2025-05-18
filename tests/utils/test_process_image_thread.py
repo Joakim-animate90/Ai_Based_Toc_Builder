@@ -1,145 +1,158 @@
 import pytest
-import base64
 import os
-from unittest.mock import Mock, patch, MagicMock
-import threading
-from concurrent.futures import ThreadPoolExecutor
-
+from unittest.mock import patch, Mock, MagicMock
 from app.utils.process_image_thread import PDFToBase64Thread
+
 
 @pytest.fixture
 def mock_pdf_document():
     """Fixture for a mock PDF document."""
     mock_doc = Mock()
-    
+
     # Setup page count
     mock_doc.page_count = 5
-    
+
     # Setup page loading
     mock_page = Mock()
     mock_doc.load_page.return_value = mock_page
-    
+
     # Setup pixmap
     mock_pixmap = Mock()
     mock_page.get_pixmap.return_value = mock_pixmap
-    mock_pixmap.tobytes.return_value = b'test_image_bytes'
-    
+    mock_pixmap.tobytes.return_value = b"test_image_bytes"
+
     return mock_doc
+
 
 @pytest.fixture
 def thread_converter():
     """Fixture for a PDFToBase64Thread instance."""
     return PDFToBase64Thread(num_threads=2)
 
-@patch('base64.b64encode')
+
+@patch("base64.b64encode")
 def test_process_page(mock_b64encode, thread_converter, mock_pdf_document):
     """Test _process_page method."""
     # Arrange
-    mock_b64encode.return_value = b'base64_encoded_test'
-    
+    mock_b64encode.return_value = b"base64_encoded_test"
+
     # Act
     page_num, base64_image = thread_converter._process_page(mock_pdf_document, 0, 5)
-    
+
     # Assert
     assert page_num == 0
-    assert base64_image == 'base64_encoded_test'
-    
+    assert base64_image == "base64_encoded_test"
+
     # Verify PDF processing
     mock_pdf_document.load_page.assert_called_once_with(0)
     page = mock_pdf_document.load_page.return_value
     page.get_pixmap.assert_called_once()
     pixmap = page.get_pixmap.return_value
     pixmap.tobytes.assert_called_once_with("png")
-    mock_b64encode.assert_called_once_with(b'test_image_bytes')
+    mock_b64encode.assert_called_once_with(b"test_image_bytes")
+
 
 def test_process_page_error(thread_converter, mock_pdf_document):
     """Test _process_page error handling."""
     # Arrange
     mock_pdf_document.load_page.side_effect = Exception("PDF error")
-    
+
     # Act
     page_num, base64_image = thread_converter._process_page(mock_pdf_document, 0, 5)
-    
+
     # Assert
     assert page_num == 0
     assert base64_image is None
 
-@patch('fitz.open')
+
+@patch("fitz.open")
 def test_convert_pdf_to_base64_images(mock_open, thread_converter):
     """Test convert_pdf_to_base64_images method."""
     # Arrange
     mock_pdf = MagicMock()
     mock_pdf.page_count = 3
     mock_open.return_value = mock_pdf
-    
+
     # Setup process_page mock to return expected results
     expected_images = ["base64_0", "base64_1", "base64_2"]
-    
+
     # Act
     # Mock ThreadPoolExecutor and process_page to simulate conversion
-    with patch('concurrent.futures.ThreadPoolExecutor') as mock_executor_class, \
-         patch.object(thread_converter, '_process_page') as mock_process_page:
-         
+    with patch(
+        "app.utils.process_image_thread.ThreadPoolExecutor"
+    ), patch.object(
+        thread_converter, "_process_page"
+    ) as mock_process_page:
         # Setup process_page to return the expected page number and base64 image
-        mock_process_page.side_effect = lambda pdf, page_num, total: (page_num, f"base64_{page_num}")
-        
+        mock_process_page.side_effect = lambda pdf, page_num, total: (
+            page_num,
+            f"base64_{page_num}",
+        )
+
         # Execute the method being tested
         result = thread_converter.convert_pdf_to_base64_images("test.pdf", max_pages=3)
-    
+
     # Assert
     assert result == expected_images
     mock_open.assert_called_once_with("test.pdf")
     mock_pdf.close.assert_called_once()
-    
+
     # Verify process_page would have been called for each page
     assert mock_process_page.call_count == 3
 
-@patch('fitz.open')
+
+@patch("fitz.open")
 def test_convert_pdf_with_max_pages_limit(mock_open, thread_converter):
     """Test that max_pages limits the number of pages processed."""
     # Arrange
     mock_pdf = MagicMock()
     mock_pdf.page_count = 10  # PDF has 10 pages but we'll limit to 3
     mock_open.return_value = mock_pdf
-    
+
     # Act - test with max_pages=3
-    with patch('concurrent.futures.ThreadPoolExecutor'), \
-         patch.object(thread_converter, '_process_page') as mock_process_page:
+    with patch("concurrent.futures.ThreadPoolExecutor"), patch.object(
+        thread_converter, "_process_page"
+    ) as mock_process_page:
         # Setup process_page mock
         mock_process_page.return_value = (0, "base64_test")
-        
+
         # Execute the method being tested
         thread_converter.convert_pdf_to_base64_images("test.pdf", max_pages=3)
-    
+
     # Assert - verify pages processed matches max_pages limit, not total PDF pages
     assert mock_process_page.call_count == 3
-    
+
     # Also confirm that the mock PDF was opened and closed
     mock_open.assert_called_once_with("test.pdf")
     mock_pdf.close.assert_called_once()
 
-@patch('fitz.open')
+
+@patch("fitz.open")
 def test_convert_pdf_error_handling(mock_open, thread_converter):
     """Test error handling in convert_pdf_to_base64_images."""
     # Arrange - PDF object raises exception
     mock_open.side_effect = Exception("Failed to open PDF")
-    
+
     # Act & Assert
     with pytest.raises(Exception) as excinfo:
         thread_converter.convert_pdf_to_base64_images("test.pdf")
-    
+
     assert "Failed to open PDF" in str(excinfo.value)
 
-@pytest.mark.parametrize("thread_count,expected", [
-    (None, None),  # Should use default (cpu_count-1)
-    (4, 4),        # Should use exactly 4 threads
-    (0, 1)         # Should use minimum of 1 thread
-])
+
+@pytest.mark.parametrize(
+    "thread_count,expected",
+    [
+        (None, None),  # Should use default (cpu_count-1)
+        (4, 4),  # Should use exactly 4 threads
+        (0, 1),  # Should use minimum of 1 thread
+    ],
+)
 def test_thread_converter_init(thread_count, expected):
     """Test initialization with different thread counts."""
     # Arrange & Act
     converter = PDFToBase64Thread(num_threads=thread_count)
-    
+
     # Assert
     if expected is None:
         # Should use CPU count - 1 with minimum of 1
