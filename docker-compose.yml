@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ai_toc_builder:${APP_VERSION:-latest}
+    container_name: ai_toc_builder
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Mount code for development live reload
+      - ./app:/app/app:ro
+      # Mount output directory to persist TOC files
+      - toc_data:/app/toc
+      # Mount PDF files for processing
+      - ./pdf_files:/app/pdf_files:ro
+    ports:
+      - "${PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/toc/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  toc_data:
+    name: ai_toc_builder_toc_data
