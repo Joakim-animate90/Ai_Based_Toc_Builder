@@ -1,5 +1,7 @@
 # AI-Based Table of Contents Builder
 
+[![codecov](https://codecov.io/gh/Joakim-animate90/Ai_Based_Toc_Builder/branch/main/graph/badge.svg)](https://codecov.io/gh/Joakim-animate90/Ai_Based_Toc_Builder)
+
 An intelligent, scalable API for extracting tables of contents from PDF documents using AI.
 
 ## Features

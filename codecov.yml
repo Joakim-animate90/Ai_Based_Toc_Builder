@@ -1,0 +1,50 @@
+codecov:
+  require_ci_to_pass: true
+  notify:
+    wait_for_ci: true
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+  status:
+    project:
+      default:
+        target: 80%    # Overall project coverage target
+        threshold: 1%  # Allow small decreases without failing
+    patch:
+      default:
+        target: 85%    # Higher standard for new code
+    changes: true      # Track coverage changes for entire PR
+
+# Separate status for the PDF thread processing implementation
+  status:
+    project:
+      pdf-processing:
+        target: 90%
+        paths:
+          - "app/utils/process_image_thread.py"
+      
+# Comment behavior for pull requests
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+# Flags for different parts of the codebase
+flags:
+  unittests:
+    paths:
+      - app/
+    carryforward: true
+  thread-tests:
+    paths:
+      - app/utils/process_image_thread.py
+    carryforward: true
+
+# Ignore patterns
+ignore:
+  - "tests/**/*"
+  - "venv/**/*"

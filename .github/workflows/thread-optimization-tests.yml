@@ -63,12 +63,12 @@ jobs:
             echo "THREAD_COUNT=2" >> $GITHUB_ENV
           fi
       
-      - name: Run thread-specific unit tests
+      - name: Run thread-specific unit tests with coverage
         if: matrix.test-type == 'unit'
         env:
           THREAD_COUNT: ${{ env.THREAD_COUNT }}
         run: |
-          pytest tests/utils/test_process_image_thread.py -v
+          pytest tests/utils/test_process_image_thread.py -v --cov=app --cov-report=xml
       
       - name: Run thread performance benchmarks
         if: matrix.test-type == 'performance'
@@ -127,5 +127,16 @@ jobs:
           name: benchmark-comparison-py${{ matrix.python-version }}
           path: benchmark_report.md
           if-no-files-found: ignore
+      
+      - name: Upload coverage to Codecov
+        if: matrix.test-type == 'unit' && success()
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: thread-tests
+          name: thread-optimization-codecov-${{ matrix.python-version }}
+          fail_ci_if_error: false
+          verbose: true
           
   # Notifications removed as requested
