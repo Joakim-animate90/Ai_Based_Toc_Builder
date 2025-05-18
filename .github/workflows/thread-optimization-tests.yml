@@ -65,8 +65,10 @@ jobs:
       
       - name: Run thread-specific unit tests
         if: matrix.test-type == 'unit'
+        env:
+          THREAD_COUNT: ${{ env.THREAD_COUNT }}
         run: |
-          pytest tests/utils/test_process_image_thread.py -v --thread-count=$THREAD_COUNT
+          pytest tests/utils/test_process_image_thread.py -v
       
       - name: Run thread performance benchmarks
         if: matrix.test-type == 'performance'

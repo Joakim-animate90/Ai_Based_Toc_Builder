@@ -139,17 +139,27 @@ def test_convert_pdf_error_handling(mock_open, thread_converter):
 
 
 @pytest.mark.parametrize(
-    "thread_count,expected",
+    "explicit_thread_count,expected",
     [
         (None, None),  # Should use default (cpu_count-1)
         (4, 4),  # Should use exactly 4 threads
         (0, 1),  # Should use minimum of 1 thread
     ],
 )
-def test_thread_converter_init(thread_count, expected):
-    """Test initialization with different thread counts."""
+def test_thread_converter_init(explicit_thread_count, expected, thread_count):
+    """Test initialization with different thread counts.
+    
+    Args:
+        explicit_thread_count: The thread count value passed directly to the constructor
+        expected: Expected thread count or None for default
+        thread_count: Fixture that provides the thread count from command line or environment
+    """
+    # If thread_count fixture has a value, it should override the explicit count
+    # This allows CI to control the thread count via environment variables
+    actual_thread_count = thread_count if thread_count is not None else explicit_thread_count
+    
     # Arrange & Act
-    converter = PDFToBase64Thread(num_threads=thread_count)
+    converter = PDFToBase64Thread(num_threads=actual_thread_count)
 
     # Assert
     if expected is None:
