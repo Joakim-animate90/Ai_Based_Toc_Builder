@@ -1,5 +1,6 @@
 import base64
 import threading
+import os
 import fitz  # PyMuPDF
 from concurrent.futures import ThreadPoolExecutor
 from app.utils.decorators import timing_decorator
@@ -9,7 +10,12 @@ class PDFToBase64Thread:
     
     def __init__(self, num_threads=None):
         """Initialize with optional thread count."""
-        self.num_threads = num_threads or max(1, threading.cpu_count() - 1)
+        # If thread_count is 0 or None, use CPU count - 1 with minimum of 1
+        if num_threads is None:
+            self.num_threads = max(1, os.cpu_count() - 1)
+        else:
+            # Ensure at least 1 thread
+            self.num_threads = max(1, num_threads)
         
     def _process_page(self, pdf_document, page_num, pages_to_process):
         """Process a single PDF page to a base64-encoded image."""

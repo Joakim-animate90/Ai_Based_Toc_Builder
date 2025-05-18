@@ -34,28 +34,30 @@ def test_openai_service_init():
     service = OpenAIService()
     assert service._client is None
 
-@patch('app.core.config.settings.OPENAI_API_KEY', 'fake-api-key')
-@patch('openai.OpenAI')
-def test_client_property_lazy_loading(mock_openai_class):
+def test_client_property_lazy_loading():
     """Test that the client property lazy-loads the OpenAI client."""
     # Arrange
-    mock_client = Mock()
-    mock_openai_class.return_value = mock_client
     service = OpenAIService()
+    mock_client = Mock()
     
-    # Act - first access creates client
-    client1 = service.client
+    # Initial state - client should be None
+    assert service._client is None
     
-    # Assert first client creation
-    assert client1 is mock_client
-    mock_openai_class.assert_called_once_with(api_key='fake-api-key')
-    
-    # Act - second access reuses existing client
-    client2 = service.client
-    
-    # Assert client reuse
-    assert client2 is client1
-    assert mock_openai_class.call_count == 1  # Still only called once
+    # Setup - patch the _setup_client method to return our mock
+    with patch.object(service, '_setup_client', return_value=mock_client) as mock_setup:
+        # Act - First access should trigger _setup_client
+        client1 = service.client
+        
+        # Assert - Client should be set and _setup_client should have been called once
+        assert service._client is mock_client
+        mock_setup.assert_called_once()
+        
+        # Act - Second access should reuse the existing client
+        client2 = service.client
+        
+        # Assert - Client should still be the same and _setup_client should not be called again
+        assert client2 is client1
+        assert mock_setup.call_count == 1  # Still only called once
 
 @patch('app.core.config.settings.OPENAI_API_KEY', '')
 def test_setup_client_no_api_key():

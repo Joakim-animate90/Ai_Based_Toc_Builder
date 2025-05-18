@@ -7,29 +7,26 @@ def test_toc_request_valid():
     """Test TOCRequest with valid data."""
     # Test with all fields
     request = TOCRequest(
-        pdf_path="/path/to/document.pdf",
         output_file="toc/output.txt",
         max_pages=10
     )
-    assert request.pdf_path == "/path/to/document.pdf"
     assert request.output_file == "toc/output.txt"
     assert request.max_pages == 10
     
-    # Test with only required fields
-    request = TOCRequest(pdf_path="/path/to/document.pdf")
-    assert request.pdf_path == "/path/to/document.pdf"
+    # Test with no fields (all optional now)
+    request = TOCRequest()
     assert request.output_file is None
     assert request.max_pages == 10  # Default value
 
 def test_toc_request_invalid():
     """Test TOCRequest validation."""
-    # Test missing required field
-    with pytest.raises(ValidationError):
-        TOCRequest()
-    
     # Test invalid type for max_pages
     with pytest.raises(ValidationError):
-        TOCRequest(pdf_path="/path/to/doc.pdf", max_pages="not a number")
+        TOCRequest(max_pages="not a number")
+    
+    # Test negative value for max_pages
+    with pytest.raises(ValidationError):
+        TOCRequest(max_pages=-1)
 
 def test_toc_response_valid():
     """Test TOCResponse with valid data."""

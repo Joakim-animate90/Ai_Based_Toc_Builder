@@ -1,5 +1,6 @@
 import pytest
 import base64
+import os
 from unittest.mock import Mock, patch, MagicMock
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -64,73 +65,58 @@ def test_process_page_error(thread_converter, mock_pdf_document):
     assert base64_image is None
 
 @patch('fitz.open')
-@patch('concurrent.futures.ThreadPoolExecutor')
-def test_convert_pdf_to_base64_images(mock_executor_class, mock_open, thread_converter):
+def test_convert_pdf_to_base64_images(mock_open, thread_converter):
     """Test convert_pdf_to_base64_images method."""
     # Arrange
     mock_pdf = MagicMock()
     mock_pdf.page_count = 3
     mock_open.return_value = mock_pdf
     
-    # Setup mock executor
-    mock_executor = MagicMock()
-    mock_executor_class.return_value.__enter__.return_value = mock_executor
-    
-    # Setup mock futures
-    future1, future2, future3 = MagicMock(), MagicMock(), MagicMock()
-    future1.result.return_value = (0, "base64_0")
-    future2.result.return_value = (1, "base64_1")
-    future3.result.return_value = (2, "base64_2")
-    
-    # Mock the __iter__ method of the executor to return our futures
-    mock_executor.__iter__.return_value = [future1, future2, future3]
-    
-    # Mock the submit method to return futures
-    def mock_submit(func, *args, **kwargs):
-        page_num = args[1]  # Second arg to _process_page is page_num
-        if page_num == 0:
-            return future1
-        elif page_num == 1:
-            return future2
-        else:
-            return future3
-    
-    mock_executor.submit = mock_submit
+    # Setup process_page mock to return expected results
+    expected_images = ["base64_0", "base64_1", "base64_2"]
     
     # Act
-    result = thread_converter.convert_pdf_to_base64_images("test.pdf", max_pages=3)
+    # Mock ThreadPoolExecutor and process_page to simulate conversion
+    with patch('concurrent.futures.ThreadPoolExecutor') as mock_executor_class, \
+         patch.object(thread_converter, '_process_page') as mock_process_page:
+         
+        # Setup process_page to return the expected page number and base64 image
+        mock_process_page.side_effect = lambda pdf, page_num, total: (page_num, f"base64_{page_num}")
+        
+        # Execute the method being tested
+        result = thread_converter.convert_pdf_to_base64_images("test.pdf", max_pages=3)
     
     # Assert
-    assert result == ["base64_0", "base64_1", "base64_2"]
+    assert result == expected_images
     mock_open.assert_called_once_with("test.pdf")
     mock_pdf.close.assert_called_once()
     
-    # Verify futures were accessed
-    future1.result.assert_called_once()
-    future2.result.assert_called_once()
-    future3.result.assert_called_once()
+    # Verify process_page would have been called for each page
+    assert mock_process_page.call_count == 3
 
 @patch('fitz.open')
-@patch('concurrent.futures.ThreadPoolExecutor')
-def test_convert_pdf_with_max_pages_limit(mock_executor_class, mock_open, thread_converter):
+def test_convert_pdf_with_max_pages_limit(mock_open, thread_converter):
     """Test that max_pages limits the number of pages processed."""
     # Arrange
     mock_pdf = MagicMock()
-    mock_pdf.page_count = 10  # PDF has 10 pages
+    mock_pdf.page_count = 10  # PDF has 10 pages but we'll limit to 3
     mock_open.return_value = mock_pdf
     
-    # Setup mock executor
-    mock_executor = MagicMock()
-    mock_executor_class.return_value.__enter__.return_value = mock_executor
-    
-    # Mock submit to verify number of calls
-    mock_executor.submit = MagicMock()
-    
     # Act - test with max_pages=3
-    thread_converter.convert_pdf_to_base64_images("test.pdf", max_pages=3)
+    with patch('concurrent.futures.ThreadPoolExecutor'), \
+         patch.object(thread_converter, '_process_page') as mock_process_page:
+        # Setup process_page mock
+        mock_process_page.return_value = (0, "base64_test")
+        
+        # Execute the method being tested
+        thread_converter.convert_pdf_to_base64_images("test.pdf", max_pages=3)
     
-    # Assert - should only create futures for 3 pages
-    assert mock_executor.submit.call_count == 3
+    # Assert - verify pages processed matches max_pages limit, not total PDF pages
+    assert mock_process_page.call_count == 3
+    
+    # Also confirm that the mock PDF was opened and closed
+    mock_open.assert_called_once_with("test.pdf")
+    mock_pdf.close.assert_called_once()
 
 @patch('fitz.open')
 def test_convert_pdf_error_handling(mock_open, thread_converter):
@@ -157,6 +143,6 @@ def test_thread_converter_init(thread_count, expected):
     # Assert
     if expected is None:
         # Should use CPU count - 1 with minimum of 1
-        assert converter.num_threads == max(1, threading.cpu_count() - 1)
+        assert converter.num_threads == max(1, os.cpu_count() - 1)
     else:
         assert converter.num_threads == expected
