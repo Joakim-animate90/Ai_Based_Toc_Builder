@@ -50,11 +50,7 @@ test-thread:
 	THREAD_COUNT=$(THREAD_COUNT) $(PYTHON) -m pytest $(TEST_DIR)/utils/test_process_image_thread.py -v
 
 test-benchmark:
-	$(PYTHON) -m pytest $(TEST_DIR)/utils/test_process_image_thread.py::test_benchmark_pdf_conversion -v \
-		--benchmark-sort=name \
-		--benchmark-columns=min,max,mean,rounds \
-		--benchmark-group-by=param \
-		--benchmark-save=thread_benchmark
+	$(PYTHON) -m pytest $(TEST_DIR)/utils/test_process_image_thread.py::test_benchmark_pdf_conversion -v
 
 test-coverage:
 	$(PYTHON) -m pytest --cov=$(APP_DIR) $(TEST_DIR) --cov-report=term --cov-report=html

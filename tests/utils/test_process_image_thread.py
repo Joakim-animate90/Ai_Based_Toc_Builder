@@ -2,7 +2,7 @@ import pytest
 import os
 import tempfile
 from unittest.mock import patch, Mock, MagicMock
-from app.utils.process_image_thread import PDFToBase64Thread, convert_pdf_to_base64_images
+from app.utils.process_image_thread import PDFToBase64Thread
 
 
 @pytest.fixture
@@ -189,16 +189,16 @@ def sample_pdf_files():
             "small": "test_data/small.pdf",
             "large": "test_data/large.pdf",
         }
-        
+
     # Create a directory for test data if it doesn't exist
     os.makedirs("test_data", exist_ok=True)
-    
+
     # Use a temporary directory for files created during local testing
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
             # Only import fitz here to avoid import errors if not installed
             import fitz
-            
+
             # Create small test PDF (5 pages)
             small_pdf_path = os.path.join(temp_dir, "small.pdf")
             doc = fitz.open()
@@ -207,7 +207,7 @@ def sample_pdf_files():
                 page.insert_text((50, 50), f"Test page {i}")
             doc.save(small_pdf_path)
             doc.close()
-            
+
             # Create larger test PDF (20 pages)
             large_pdf_path = os.path.join(temp_dir, "large.pdf")
             doc = fitz.open()
@@ -216,12 +216,13 @@ def sample_pdf_files():
                 page.insert_text((50, 50), f"Test page {i}")
             doc.save(large_pdf_path)
             doc.close()
-            
+
             # Copy to test_data directory for persistence
             import shutil
+
             shutil.copy2(small_pdf_path, "test_data/small.pdf")
             shutil.copy2(large_pdf_path, "test_data/large.pdf")
-            
+
             return {
                 "small": "test_data/small.pdf",
                 "large": "test_data/large.pdf",
@@ -232,21 +233,19 @@ def sample_pdf_files():
 
 
 @pytest.mark.parametrize(
-    "thread_count", 
+    "thread_count",
     [(1), (2), (4), (8), (None)],
-    ids=["1-thread", "2-threads", "4-threads", "8-threads", "auto-threads"]
+    ids=["1-thread", "2-threads", "4-threads", "8-threads", "auto-threads"],
 )
 @pytest.mark.parametrize(
-    "pdf_size",
-    [("small"), ("large")],
-    ids=["small-pdf", "large-pdf"]
+    "pdf_size", [("small"), ("large")], ids=["small-pdf", "large-pdf"]
 )
 def test_benchmark_pdf_conversion(benchmark, sample_pdf_files, thread_count, pdf_size):
     """Benchmark the PDF-to-base64 conversion with different thread counts.
-    
+
     This test measures the performance of the threaded PDF conversion with
     different numbers of threads and different PDF sizes.
-    
+
     Args:
         benchmark: pytest-benchmark fixture
         sample_pdf_files: fixture providing sample PDF files
@@ -255,25 +254,27 @@ def test_benchmark_pdf_conversion(benchmark, sample_pdf_files, thread_count, pdf
     """
     if not sample_pdf_files:
         pytest.skip("Sample PDF files could not be created")
-    
+
     pdf_path = sample_pdf_files[pdf_size]
-    
+
     # Skip if file doesn't exist
     if not os.path.exists(pdf_path):
         pytest.skip(f"Sample PDF file {pdf_path} not found")
-    
+
     # Get the expected number of pages
     expected_pages = 5 if pdf_size == "small" else 20
-    
+
     # Define the function to benchmark
     def convert_pdf():
         converter = PDFToBase64Thread(num_threads=thread_count)
-        result = converter.convert_pdf_to_base64_images(pdf_path, max_pages=expected_pages)
+        result = converter.convert_pdf_to_base64_images(
+            pdf_path, max_pages=expected_pages
+        )
         # Verify we got the right number of pages
         assert len(result) == expected_pages
         return result
-    
+
     # Run the benchmark
     result = benchmark(convert_pdf)
-    
+
     # The benchmark automatically collects and reports metrics
