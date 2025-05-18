@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 
     # PDF Processing
-    PDF_MAX_PAGES: int = 20
+    PDF_MAX_PAGES: int = 5
     PDF_OUTPUT_DIR: str = "toc"
 
     # Performance
