@@ -15,7 +15,11 @@ def pytest_addoption(parser):
 
 @pytest.fixture(scope="session")
 def thread_count(request):
-    """Get thread count from command line or environment variable."""
+    """Get thread count from command line or environment variable.
+    
+    This is deliberately made optional by giving it a default value of None,
+    so that parametrized tests can work correctly.
+    """
     # Command line option takes precedence
     cli_value = request.config.getoption("--thread-count")
     if cli_value is not None:
@@ -26,5 +30,5 @@ def thread_count(request):
     if env_value is not None:
         return int(env_value)
     
-    # Default value if nothing is specified
+    # Default value if nothing is specified - return None to not interfere with test parameters
     return None
