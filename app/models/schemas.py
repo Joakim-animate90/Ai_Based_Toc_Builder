@@ -106,6 +106,35 @@ class TOCUrlRequest(BaseModel):
     )
 
 
+class TOCBrowserRequest(BaseModel):
+    """Request model for TOC extraction from browser uploads."""
+
+    filename: str = Field(..., description="Original filename of the uploaded PDF")
+    output_file: Optional[str] = Field(
+        None, description="Path to save the extracted TOC"
+    )
+    max_pages: Optional[int] = Field(
+        5, description="Maximum number of pages to process"
+    )
+
+    @field_validator("max_pages")
+    @classmethod
+    def validate_max_pages(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("max_pages must be greater than 0")
+        return v
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "filename": "document.pdf",
+                "output_file": "toc/my_table_of_contents.txt",
+                "max_pages": 10,
+            }
+        }
+    )
+
+
 class HealthResponse(BaseModel):
     """Health check response model."""
 

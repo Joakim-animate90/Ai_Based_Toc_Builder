@@ -19,20 +19,8 @@ def mock_pdf_service():
 def mock_openai_service():
     """Fixture for a mock OpenAI service."""
     mock = Mock(spec=OpenAIService)
-    mock.extract_toc_from_images.return_value = {
-        "toc_entries": [
-            {
-                "case_number": "123/456",
-                "case_id": "123",
-                "plaintiff": "John Doe",
-                "defendant": "Company XYZ",
-                "page_number": "45",
-                "raw_text": "Juicio nº 123 a instancia de John Doe contra Company XYZ .................. Página 45",
-            }
-        ],
-        "section_headers": ["Juzgado de lo Social Número 3 de Santa Cruz de Tenerife"],
-        "raw_content": "Sample TOC content",
-    }
+    # Return a test JSON string with Sample TOC content embedded in it
+    mock.extract_toc_from_images.return_value = '{"toc_entries": [{"case_number": "123/456", "case_id": "123", "plaintiff": "John Doe", "defendant": "Company XYZ", "page_number": "45", "raw_text": "Juicio nº 123 a instancia de John Doe contra Company XYZ .................. Página 45"}], "section_headers": ["Juzgado de lo Social Número 3 de Santa Cruz de Tenerife"], "raw_content": "Sample TOC content"}'
     return mock
 
 
@@ -71,7 +59,7 @@ def test_extract_toc_with_output_file(toc_service_with_mocks):
     toc_content, file_path = toc_service_with_mocks.extract_toc(pdf_path, output_file)
 
     # Assert
-    assert toc_content == "Sample TOC content"
+    assert "Sample TOC content" in toc_content
     assert file_path == "toc/output.txt"
 
     # Verify service calls
@@ -82,7 +70,7 @@ def test_extract_toc_with_output_file(toc_service_with_mocks):
         ["base64_image1", "base64_image2"]
     )
     toc_service_with_mocks.pdf_service.save_toc_to_file.assert_called_once_with(
-        "Sample TOC content", output_file
+        toc_content, output_file
     )
 
 
@@ -95,7 +83,7 @@ def test_extract_toc_without_output_file(toc_service_with_mocks):
     toc_content, file_path = toc_service_with_mocks.extract_toc(pdf_path)
 
     # Assert
-    assert toc_content == "Sample TOC content"
+    assert "Sample TOC content" in toc_content
     assert file_path == "toc/output.txt"
 
     # Verify service calls
@@ -106,7 +94,7 @@ def test_extract_toc_without_output_file(toc_service_with_mocks):
         ["base64_image1", "base64_image2"]
     )
     toc_service_with_mocks.pdf_service.save_toc_to_file.assert_called_once_with(
-        "Sample TOC content"
+        toc_content
     )
 
 
@@ -146,7 +134,7 @@ def test_extract_toc_from_upload(mock_tempfile, toc_service_with_mocks):
         )
 
     # Assert
-    assert toc_content == "Sample TOC content"
+    assert "Sample TOC content" in toc_content
     assert file_path == "toc/output.txt"
 
     # Verify service calls
@@ -158,7 +146,7 @@ def test_extract_toc_from_upload(mock_tempfile, toc_service_with_mocks):
         ["base64_image1", "base64_image2"]
     )
     toc_service_with_mocks.pdf_service.save_toc_to_file.assert_called_once_with(
-        "Sample TOC content", output_file
+        toc_content, output_file
     )
 
 
@@ -183,7 +171,7 @@ def test_extract_toc_from_upload_no_output_file(mock_tempfile, toc_service_with_
         )
 
     # Assert
-    assert toc_content == "Sample TOC content"
+    assert "Sample TOC content" in toc_content
     assert file_path == "toc/output.txt"
 
     # Verify temp file is used properly

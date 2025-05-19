@@ -27,6 +27,7 @@ def mock_openai_client():
             "section_headers": [
                 "Juzgado de lo Social Número 3 de Santa Cruz de Tenerife"
             ],
+            "raw_content": "Sample TOC content",
         }
     )
     chat_mock.completions.create.return_value = MagicMock(
@@ -99,7 +100,7 @@ def test_extract_toc_from_images(openai_service_with_mock):
     result = openai_service_with_mock.extract_toc_from_images(base64_images)
 
     # Assert
-    assert isinstance(result, dict)
+    assert isinstance(result, str)
     assert "toc_entries" in result
     assert "section_headers" in result
 
@@ -141,14 +142,16 @@ def test_extract_toc_from_images_api_error(openai_service_with_mock):
     result = openai_service_with_mock.extract_toc_from_images(base64_images)
 
     # Assert
-    assert isinstance(result, dict)
-    assert "toc_entries" in result
-    assert len(result["toc_entries"]) == 0  # Should be empty when errors occur
-    assert "section_headers" in result
-    assert "error" in result
-    assert result["error"] is True
-    assert "error_message" in result
-    assert "API error" in result["error_message"]
+    assert isinstance(result, str)
+    # Parse the JSON string into a dictionary for assertion testing
+    parsed_result = json.loads(result)
+    assert "toc_entries" in parsed_result
+    assert len(parsed_result["toc_entries"]) == 0  # Should be empty when errors occur
+    assert "section_headers" in parsed_result
+    assert "error" in parsed_result
+    assert parsed_result["error"] is True
+    assert "error_message" in parsed_result
+    assert "API error" in parsed_result["error_message"]
 
 
 # Test for _process_single_page method has been removed since the method no longer exists
@@ -164,12 +167,14 @@ def test_extract_toc_empty_images(openai_service_with_mock):
     result = openai_service_with_mock.extract_toc_from_images(base64_images)
 
     # Assert
-    assert isinstance(result, dict)
-    assert "toc_entries" in result
-    assert len(result["toc_entries"]) == 0  # Should be empty for empty input
-    assert "section_headers" in result
-    assert "raw_content" in result
-    assert "No content to process" in result["raw_content"]
+    assert isinstance(result, str)
+    # Parse the JSON string into a dictionary for assertion testing
+    parsed_result = json.loads(result)
+    assert "toc_entries" in parsed_result
+    assert len(parsed_result["toc_entries"]) == 0  # Should be empty for empty input
+    assert "section_headers" in parsed_result
+    assert "raw_content" in parsed_result
+    assert "No content to process" in parsed_result["raw_content"]
 
     # Should not call OpenAI API
     openai_service_with_mock._client.chat.completions.create.assert_not_called()

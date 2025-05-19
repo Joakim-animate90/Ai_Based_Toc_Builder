@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF TOC Extractor - Browser Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"], input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>PDF Table of Contents Extractor</h1>
+    <div class="container">
+        <form id="pdfForm">
+            <div class="form-group">
+                <label for="pdfFile">Select PDF File:</label>
+                <input type="file" id="pdfFile" name="file" accept="application/pdf" required>
+            </div>
+            <div class="form-group">
+                <label for="filename">Filename:</label>
+                <input type="text" id="filename" name="filename" readonly>
+            </div>
+            <div class="form-group">
+                <label for="outputFile">Output File (optional):</label>
+                <input type="text" id="outputFile" name="output_file" placeholder="toc/result.txt">
+            </div>
+            <div class="form-group">
+                <label for="maxPages">Maximum Pages to Process:</label>
+                <input type="number" id="maxPages" name="max_pages" value="5" min="1">
+            </div>
+            <button type="submit">Extract Table of Contents</button>
+        </form>
+        <div class="loading" id="loading">
+            <p>Processing your PDF... This may take a minute.</p>
+        </div>
+        <pre id="result"></pre>
+    </div>
+
+    <script>
+        document.getElementById('pdfFile').addEventListener('change', function(e) {
+            const filename = e.target.files[0] ? e.target.files[0].name : '';
+            document.getElementById('filename').value = filename;
+        });
+
+        document.getElementById('pdfForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const resultElement = document.getElementById('result');
+            const loadingElement = document.getElementById('loading');
+            
+            resultElement.style.display = 'none';
+            loadingElement.style.display = 'block';
+            
+            const formData = new FormData(this);
+            
+            try {
+                // Using the full URL to the API endpoint
+                const response = await fetch('http://localhost:8000/api/v1/toc/extract-from-browser', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Check if response is ok
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API Error (${response.status}): ${errorText}`);
+                }
+                
+                // Get raw response text and display it directly
+                const responseText = await response.text();
+                resultElement.textContent = responseText;
+                
+                resultElement.style.display = 'block';
+            } catch (error) {
+                resultElement.textContent = 'Error: ' + error.message;
+                resultElement.style.display = 'block';
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

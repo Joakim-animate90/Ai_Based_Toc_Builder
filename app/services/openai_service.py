@@ -42,11 +42,12 @@ class OpenAIService:
             dict: Extracted table of contents as a structured JSON object
         """
         if not base64_images:
-            return {
+            empty_response = {
                 "toc_entries": [],
                 "section_headers": [],
                 "raw_content": "No content to process",
             }
+            return json.dumps(empty_response)
 
         print(f"Processing {len(base64_images)} pages in a single batch...")
 
@@ -109,41 +110,21 @@ class OpenAIService:
                     {"role": "user", "content": content},
                 ],
                 response_format={"type": "json_object"},
-                max_tokens=4000,
+                max_tokens=20000,
             )
 
-            # Extract TOC from response as JSON
-            toc_json_str = response.choices[0].message.content
-
-            try:
-                # Parse the JSON response
-                toc_data = json.loads(toc_json_str)
-
-                # Validate the JSON structure
-                if not isinstance(toc_data, dict) or "toc_entries" not in toc_data:
-                    print("Warning: Unexpected JSON format in API response")
-                    # Add missing keys if not present
-                    if "toc_entries" not in toc_data:
-                        toc_data["toc_entries"] = []
-                    if "section_headers" not in toc_data:
-                        toc_data["section_headers"] = []
-
-                return toc_data
-            except json.JSONDecodeError as e:
-                print(f"Error parsing JSON response: {e}")
-                # Fall back to returning a structured error response
-                return {
-                    "toc_entries": [],
-                    "section_headers": [],
-                    "error": True,
-                    "error_message": str(e),
-                }
+            # Just return the raw response without any parsing
+            raw_response = response.choices[0].message.content
+            print("Returning raw OpenAI response")
+            return raw_response
 
         except Exception as e:
             print(f"Error processing pages: {str(e)}")
-            return {
+            # Return a JSON string for error cases to keep the API response consistent
+            error_response = {
                 "toc_entries": [],
                 "section_headers": [],
                 "error": True,
                 "error_message": str(e),
             }
+            return json.dumps(error_response)

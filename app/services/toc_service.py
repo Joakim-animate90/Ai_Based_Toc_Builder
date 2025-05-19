@@ -35,17 +35,10 @@ class TOCService:
         # Extract TOC using OpenAI
         toc_data = self.openai_service.extract_toc_from_images(base64_images)
 
-        # For backward compatibility with tests
-        # If the response is a dictionary with raw_content, use that
-        # Otherwise, for the new format where raw_content is not included, extract only what's needed for tests
-        if isinstance(toc_data, dict):
-            if "raw_content" in toc_data:
-                toc_content = toc_data["raw_content"]
-            else:
-                # For tests, provide raw_content as expected
-                toc_content = "Sample TOC content"
-        else:
-            toc_content = str(toc_data)
+        # Now toc_data is the raw string from OpenAI
+        # Just pass it through directly without any modification
+        toc_content = toc_data
+        print("Passing through raw content from OpenAI")
 
         # Save TOC to file if requested
         if output_file:
@@ -85,16 +78,10 @@ class TOCService:
             # Extract TOC using OpenAI
             toc_data = self.openai_service.extract_toc_from_images(base64_images)
 
-            # Extract raw content from the JSON response
-            if isinstance(toc_data, dict):
-                if "raw_content" in toc_data:
-                    toc_content = toc_data["raw_content"]
-                else:
-                    # For tests, provide raw_content as expected
-                    toc_content = "Sample TOC content"
-            else:
-                # Fallback for backward compatibility
-                toc_content = str(toc_data)
+            # Now toc_data is the raw string from OpenAI
+            # Just pass it through directly without any modification
+            toc_content = toc_data
+            print("Passing through raw content from upload")
 
             # For backward compatibility with existing tests
             # If output_file is None, still save to default location for existing tests
@@ -163,15 +150,10 @@ class TOCService:
                         )
                     raise
 
-                # Extract appropriate content for output
-                if isinstance(toc_data, dict):
-                    if "raw_content" in toc_data:
-                        toc_content = toc_data["raw_content"]
-                    else:
-                        # For tests, provide raw_content as expected
-                        toc_content = "Sample TOC content"
-                else:
-                    toc_content = str(toc_data)
+                # Now toc_data is the raw string from OpenAI
+                # Just pass it through directly without any modification
+                toc_content = toc_data
+                print("Passing through raw content from URL")
 
                 # For consistency with extract_toc_from_upload
                 if output_file:

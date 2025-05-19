@@ -9,7 +9,7 @@ python-multipart==0.0.9
 # PDF Processing
 PyMuPDF==1.23.5  # For PDF processing
 requests==2.31.0  # For downloading PDFs from URLs
-types-requests==2.32.0  # Type stubs for requests
+types-requests==2.32.0.20250515  # Type stubs for requests
 
 # OpenAI API
 openai==1.10.0
