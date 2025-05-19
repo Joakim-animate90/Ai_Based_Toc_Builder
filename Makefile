@@ -1,8 +1,8 @@
 .PHONY: help clean lint format test test-thread test-coverage run install docker-build docker-run all-checks
 
 # Variables
-PYTHON = python
-PIP = pip
+PYTHON = python3
+PIP = pip3
 APP_MODULE = app.main:app
 PORT = 8000
 APP_DIR = app

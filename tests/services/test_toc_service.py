@@ -11,7 +11,7 @@ def mock_pdf_service():
     """Fixture for a mock PDF service."""
     mock = Mock(spec=PDFService)
     mock.convert_pdf_to_images.return_value = ["base64_image1", "base64_image2"]
-    mock.save_toc_to_file.return_value = "toc/output.txt"
+    # We no longer call save_toc_to_file
     return mock
 
 
@@ -60,7 +60,7 @@ def test_extract_toc_with_output_file(toc_service_with_mocks):
 
     # Assert
     assert "Sample TOC content" in toc_content
-    assert file_path == "toc/output.txt"
+    assert file_path is None  # No file is saved now
 
     # Verify service calls
     toc_service_with_mocks.pdf_service.convert_pdf_to_images.assert_called_once_with(
@@ -69,9 +69,7 @@ def test_extract_toc_with_output_file(toc_service_with_mocks):
     toc_service_with_mocks.openai_service.extract_toc_from_images.assert_called_once_with(
         ["base64_image1", "base64_image2"]
     )
-    toc_service_with_mocks.pdf_service.save_toc_to_file.assert_called_once_with(
-        toc_content, output_file
-    )
+    # We no longer call save_toc_to_file
 
 
 def test_extract_toc_without_output_file(toc_service_with_mocks):
@@ -84,7 +82,7 @@ def test_extract_toc_without_output_file(toc_service_with_mocks):
 
     # Assert
     assert "Sample TOC content" in toc_content
-    assert file_path == "toc/output.txt"
+    assert file_path is None  # No file is saved now
 
     # Verify service calls
     toc_service_with_mocks.pdf_service.convert_pdf_to_images.assert_called_once_with(
@@ -93,9 +91,7 @@ def test_extract_toc_without_output_file(toc_service_with_mocks):
     toc_service_with_mocks.openai_service.extract_toc_from_images.assert_called_once_with(
         ["base64_image1", "base64_image2"]
     )
-    toc_service_with_mocks.pdf_service.save_toc_to_file.assert_called_once_with(
-        toc_content
-    )
+    # We no longer call save_toc_to_file
 
 
 @patch.object(PDFService, "convert_pdf_to_images")
@@ -135,7 +131,7 @@ def test_extract_toc_from_upload(mock_tempfile, toc_service_with_mocks):
 
     # Assert
     assert "Sample TOC content" in toc_content
-    assert file_path == "toc/output.txt"
+    assert file_path is None  # No file is saved now
 
     # Verify service calls
     mock_temp_instance.write.assert_called_once_with(pdf_content)
@@ -145,9 +141,7 @@ def test_extract_toc_from_upload(mock_tempfile, toc_service_with_mocks):
     toc_service_with_mocks.openai_service.extract_toc_from_images.assert_called_once_with(
         ["base64_image1", "base64_image2"]
     )
-    toc_service_with_mocks.pdf_service.save_toc_to_file.assert_called_once_with(
-        toc_content, output_file
-    )
+    # We no longer call save_toc_to_file
 
 
 @patch("tempfile.NamedTemporaryFile")
@@ -172,7 +166,7 @@ def test_extract_toc_from_upload_no_output_file(mock_tempfile, toc_service_with_
 
     # Assert
     assert "Sample TOC content" in toc_content
-    assert file_path == "toc/output.txt"
+    assert file_path is None  # No file is saved now
 
     # Verify temp file is used properly
     mock_temp_instance.write.assert_called_once_with(pdf_content)

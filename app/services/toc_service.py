@@ -40,13 +40,8 @@ class TOCService:
         toc_content = toc_data
         print("Passing through raw content from OpenAI")
 
-        # Save TOC to file if requested
-        if output_file:
-            saved_path = self.pdf_service.save_toc_to_file(toc_content, output_file)
-        else:
-            saved_path = self.pdf_service.save_toc_to_file(toc_content)
-
-        return toc_content, saved_path
+        # No file saving
+        return toc_content, None
 
     @timing_decorator
     def extract_toc_from_upload(
@@ -83,17 +78,8 @@ class TOCService:
             toc_content = toc_data
             print("Passing through raw content from upload")
 
-            # For backward compatibility with existing tests
-            # If output_file is None, still save to default location for existing tests
-            if output_file:
-                # Save TOC to file with specific path
-                saved_path = self.pdf_service.save_toc_to_file(toc_content, output_file)
-            else:
-                # For backward compatibility with tests
-                saved_path = self.pdf_service.save_toc_to_file(toc_content)
-
-            # Return the expected content and file path for tests
-            return toc_content, saved_path
+            # No file saving
+            return toc_content, None
         finally:
             # Clean up the temporary file
             if os.path.exists(temp_path):
@@ -155,17 +141,8 @@ class TOCService:
                 toc_content = toc_data
                 print("Passing through raw content from URL")
 
-                # For consistency with extract_toc_from_upload
-                if output_file:
-                    # Save TOC to file with specific path
-                    saved_path = self.pdf_service.save_toc_to_file(
-                        toc_content, output_file
-                    )
-                else:
-                    # Save to default location
-                    saved_path = self.pdf_service.save_toc_to_file(toc_content)
-
-                return toc_content, saved_path
+                # No file saving
+                return toc_content, None
             finally:
                 # Clean up the temporary file
                 if os.path.exists(temp_path):

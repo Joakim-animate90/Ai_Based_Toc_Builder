@@ -20,9 +20,7 @@ class TOCRequest(BaseModel):
         return v
 
     model_config = ConfigDict(
-        json_schema_extra={
-            "example": {"output_file": "toc/my_table_of_contents.txt", "max_pages": 10}
-        }
+        json_schema_extra={"example": {"output_file": None, "max_pages": 10}}
     )
 
 
@@ -48,7 +46,8 @@ class TOCResponse(BaseModel):
         description="Extracted table of contents (either as string or structured JSON)",
     )
     output_file: Optional[str] = Field(
-        None, description="Path to the saved TOC file if requested"
+        None,
+        description="No longer used - always None as the service no longer saves files",
     )
 
     model_config = ConfigDict(
@@ -71,7 +70,7 @@ class TOCResponse(BaseModel):
                     ],
                     "raw_content": "Juicio nº 123 a instancia de John Doe contra Company XYZ .................. Página 45",
                 },
-                "output_file": "toc/table_of_contents.txt",
+                "output_file": None,
             }
         }
     )
@@ -99,7 +98,7 @@ class TOCUrlRequest(BaseModel):
         json_schema_extra={
             "example": {
                 "pdf_url": "https://example.com/sample.pdf",
-                "output_file": "toc/my_table_of_contents.txt",
+                "output_file": None,
                 "max_pages": 10,
             }
         }
@@ -128,7 +127,7 @@ class TOCBrowserRequest(BaseModel):
         json_schema_extra={
             "example": {
                 "filename": "document.pdf",
-                "output_file": "toc/my_table_of_contents.txt",
+                "output_file": None,
                 "max_pages": 10,
             }
         }

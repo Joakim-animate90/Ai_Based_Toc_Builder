@@ -14,11 +14,11 @@ def mock_toc_service():
     mock_service = Mock(spec=TOCService)
     mock_service.extract_toc.return_value = (
         "Sample TOC content",
-        "toc/table_of_contents.txt",
+        None,
     )
     mock_service.extract_toc_from_upload.return_value = (
         "Sample TOC content",
-        "toc/table_of_contents.txt",
+        None,
     )
     return mock_service
 
@@ -76,7 +76,7 @@ async def test_extract_toc_direct_success(
     assert isinstance(result, TOCResponse)
     assert result.success is True
     assert result.toc_content == "Sample TOC content"
-    assert result.output_file == "toc/table_of_contents.txt"
+    assert result.output_file is None  # No file is saved now
 
     # Verify service call
     mock_pdf_file.read.assert_awaited_once()
