@@ -1,4 +1,5 @@
 import os
+import json
 from app.utils.decorators import timing_decorator
 from app.utils.process_image_thread import PDFToBase64Thread
 from app.core.config import settings
@@ -24,6 +25,7 @@ class PDFService:
     def save_toc_to_file(self, toc_content, output_path=None):
         """
         Save extracted table of contents to a file.
+        Handles both string content and dictionary (JSON) content.
         """
         if output_path is None:
             output_dir = settings.PDF_OUTPUT_DIR
@@ -32,8 +34,25 @@ class PDFService:
         else:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-        # Format TOC with monospace font for better display
-        formatted_toc = "```\n" + toc_content + "\n```"
+        # Handle both dictionary and string content
+        if isinstance(toc_content, dict):
+            # If it's a dictionary, get the raw_content if available
+            if "raw_content" in toc_content:
+                raw_text = toc_content["raw_content"]
+                # Format TOC with monospace font for better display
+                formatted_toc = "```\n" + raw_text + "\n```"
+
+                # Also save the structured JSON data to a separate file
+                json_path = os.path.splitext(output_path)[0] + ".json"
+                with open(json_path, "w") as json_file:
+                    json.dump(toc_content, json_file, indent=2)
+                print(f"Structured JSON data saved to {json_path}")
+            else:
+                # If no raw_content, just save the JSON as text
+                formatted_toc = json.dumps(toc_content, indent=2)
+        else:
+            # Original behavior for string content
+            formatted_toc = "```\n" + str(toc_content) + "\n```"
 
         # Save to file
         with open(output_path, "w") as file:

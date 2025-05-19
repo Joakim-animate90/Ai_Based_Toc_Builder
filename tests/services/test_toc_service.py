@@ -19,7 +19,20 @@ def mock_pdf_service():
 def mock_openai_service():
     """Fixture for a mock OpenAI service."""
     mock = Mock(spec=OpenAIService)
-    mock.extract_toc_from_images.return_value = "Sample TOC content"
+    mock.extract_toc_from_images.return_value = {
+        "toc_entries": [
+            {
+                "case_number": "123/456",
+                "case_id": "123",
+                "plaintiff": "John Doe",
+                "defendant": "Company XYZ",
+                "page_number": "45",
+                "raw_text": "Juicio nº 123 a instancia de John Doe contra Company XYZ .................. Página 45",
+            }
+        ],
+        "section_headers": ["Juzgado de lo Social Número 3 de Santa Cruz de Tenerife"],
+        "raw_content": "Sample TOC content",
+    }
     return mock
 
 

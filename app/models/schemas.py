@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator, ConfigDict, AnyHttpUrl
-from typing import Optional
+from typing import Optional, Union, Dict, List, Any
 
 
 class TOCRequest(BaseModel):
@@ -26,11 +26,27 @@ class TOCRequest(BaseModel):
     )
 
 
+class TOCEntry(BaseModel):
+    """Model for a single TOC entry."""
+
+    case_number: Optional[str] = Field(None, description="Case number")
+    case_id: Optional[str] = Field(None, description="Case ID")
+    plaintiff: Optional[str] = Field(None, description="Plaintiff name")
+    defendant: Optional[str] = Field(None, description="Defendant name")
+    page_number: Optional[str] = Field(None, description="Page number")
+    raw_text: str = Field(
+        ..., description="Full original text as it appears in the document"
+    )
+
+
 class TOCResponse(BaseModel):
     """Response model for TOC extraction."""
 
     success: bool = Field(..., description="Whether the extraction was successful")
-    toc_content: str = Field(..., description="Extracted table of contents")
+    toc_content: Union[str, Dict[str, Any]] = Field(
+        ...,
+        description="Extracted table of contents (either as string or structured JSON)",
+    )
     output_file: Optional[str] = Field(
         None, description="Path to the saved TOC file if requested"
     )
@@ -39,7 +55,22 @@ class TOCResponse(BaseModel):
         json_schema_extra={
             "example": {
                 "success": True,
-                "toc_content": "Juicio nº 123 a instancia de Plaintiff contra Defendant .................. Página 45",
+                "toc_content": {
+                    "toc_entries": [
+                        {
+                            "case_number": "123/456",
+                            "case_id": "123",
+                            "plaintiff": "John Doe",
+                            "defendant": "Company XYZ",
+                            "page_number": "45",
+                            "raw_text": "Juicio nº 123 a instancia de John Doe contra Company XYZ .................. Página 45",
+                        }
+                    ],
+                    "section_headers": [
+                        "Juzgado de lo Social Número 3 de Santa Cruz de Tenerife"
+                    ],
+                    "raw_content": "Juicio nº 123 a instancia de John Doe contra Company XYZ .................. Página 45",
+                },
                 "output_file": "toc/table_of_contents.txt",
             }
         }

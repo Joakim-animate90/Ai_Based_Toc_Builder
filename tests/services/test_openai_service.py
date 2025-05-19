@@ -1,4 +1,5 @@
 import pytest
+import json
 from unittest.mock import Mock, patch, MagicMock
 
 from app.services.openai_service import OpenAIService
@@ -11,8 +12,25 @@ def mock_openai_client():
     mock = Mock(spec=OpenAI)
     # Setup chat completions mock
     chat_mock = MagicMock()
+    mock_json_response = json.dumps(
+        {
+            "toc_entries": [
+                {
+                    "case_number": "123/456",
+                    "case_id": "123",
+                    "plaintiff": "John Doe",
+                    "defendant": "Company XYZ",
+                    "page_number": "45",
+                    "raw_text": "Juicio nº 123 a instancia de John Doe contra Company XYZ .................. Página 45",
+                }
+            ],
+            "section_headers": [
+                "Juzgado de lo Social Número 3 de Santa Cruz de Tenerife"
+            ],
+        }
+    )
     chat_mock.completions.create.return_value = MagicMock(
-        choices=[MagicMock(message=MagicMock(content="Sample TOC content"))]
+        choices=[MagicMock(message=MagicMock(content=mock_json_response))]
     )
     mock.chat = chat_mock
     return mock
@@ -81,27 +99,31 @@ def test_extract_toc_from_images(openai_service_with_mock):
     result = openai_service_with_mock.extract_toc_from_images(base64_images)
 
     # Assert
-    assert result == "Sample TOC content"
+    assert isinstance(result, dict)
+    assert "toc_entries" in result
+    assert "section_headers" in result
 
-    # Verify OpenAI API call
+    # Verify OpenAI API calls (should be called once for all pages)
     openai_service_with_mock._client.chat.completions.create.assert_called_once()
-    args, kwargs = openai_service_with_mock._client.chat.completions.create.call_args
+
+    # Get the call arguments
+    call_args = openai_service_with_mock._client.chat.completions.create.call_args[1]
 
     # Verify model
-    assert kwargs["model"] == "test-model"
+    assert call_args["model"] == "test-model"
 
     # Verify message structure
-    assert len(kwargs["messages"]) == 2
-    assert kwargs["messages"][0]["role"] == "system"
-    assert kwargs["messages"][1]["role"] == "user"
+    assert len(call_args["messages"]) == 2
+    assert call_args["messages"][0]["role"] == "system"
+    assert call_args["messages"][1]["role"] == "user"
 
-    # Verify content structure
-    content = kwargs["messages"][1]["content"]
+    # Verify content structure (should contain all images)
+    content = call_args["messages"][1]["content"]
     assert len(content) == 3  # Text prompt + 2 images
     assert content[0]["type"] == "text"
     assert content[1]["type"] == "image_url"
-    assert content[1]["image_url"]["url"] == "data:image/png;base64,image1"
     assert content[2]["type"] == "image_url"
+    assert content[1]["image_url"]["url"] == "data:image/png;base64,image1"
     assert content[2]["image_url"]["url"] == "data:image/png;base64,image2"
 
 
@@ -114,8 +136,40 @@ def test_extract_toc_from_images_api_error(openai_service_with_mock):
         "API error"
     )
 
-    # Act & Assert
-    with pytest.raises(Exception) as excinfo:
-        openai_service_with_mock.extract_toc_from_images(base64_images)
+    # Act
+    # The method should handle the error and return a dict with error info
+    result = openai_service_with_mock.extract_toc_from_images(base64_images)
 
-    assert "API error" in str(excinfo.value)
+    # Assert
+    assert isinstance(result, dict)
+    assert "toc_entries" in result
+    assert len(result["toc_entries"]) == 0  # Should be empty when errors occur
+    assert "section_headers" in result
+    assert "error" in result
+    assert result["error"] is True
+    assert "error_message" in result
+    assert "API error" in result["error_message"]
+
+
+# Test for _process_single_page method has been removed since the method no longer exists
+
+
+@patch("app.core.config.settings.OPENAI_MODEL", "test-model")
+def test_extract_toc_empty_images(openai_service_with_mock):
+    """Test OpenAIService.extract_toc_from_images with empty image list."""
+    # Arrange
+    base64_images = []
+
+    # Act
+    result = openai_service_with_mock.extract_toc_from_images(base64_images)
+
+    # Assert
+    assert isinstance(result, dict)
+    assert "toc_entries" in result
+    assert len(result["toc_entries"]) == 0  # Should be empty for empty input
+    assert "section_headers" in result
+    assert "raw_content" in result
+    assert "No content to process" in result["raw_content"]
+
+    # Should not call OpenAI API
+    openai_service_with_mock._client.chat.completions.create.assert_not_called()

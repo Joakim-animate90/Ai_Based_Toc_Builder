@@ -14,7 +14,7 @@ def test_toc_request_valid():
     # Test with no fields (all optional now)
     request = TOCRequest()
     assert request.output_file is None
-    assert request.max_pages == 10  # Default value
+    assert request.max_pages == 5  # Default value
 
 
 def test_toc_request_invalid():
@@ -47,8 +47,12 @@ def test_toc_response_invalid():
     with pytest.raises(ValidationError):
         TOCResponse(success=True)
 
-    with pytest.raises(ValidationError):
-        TOCResponse(success=True, toc_content="Sample")
+    # TOCResponse now accepts success and toc_content without output_file
+    # as part of the change to make file saving optional
+    response = TOCResponse(success=True, toc_content="Sample")
+    assert response.success is True
+    assert response.toc_content == "Sample"
+    assert response.output_file is None
 
 
 def test_health_response():
