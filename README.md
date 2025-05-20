@@ -4,6 +4,8 @@
 
 An intelligent, scalable API for extracting tables of contents from PDF documents using AI.
 
+**[➡️ Check out the UI repository here](https://github.com/Joakim-animate90/Ai_Based_Toc_Builder_ui)**
+
 ## Features
 
 - Extract tables of contents from PDF documents using OpenAI Vision API
