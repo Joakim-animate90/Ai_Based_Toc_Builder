@@ -37,8 +37,6 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
-      
-      # PyPI publishing and notifications removed as requested
       - name: Log completion message
         run: |
           echo "Release ${{ github.ref_name }} assets created successfully"
