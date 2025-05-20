@@ -10,8 +10,10 @@ An intelligent, scalable API for extracting tables of contents from PDF document
 
 - Extract tables of contents from PDF documents using OpenAI Vision API
 - Thread-based PDF processing for optimal performance
-- RESTful API with FastAPI
-- Comprehensive test suite with pytest
+- RESTful API with FastAPI with comprehensive Swagger documentation
+- Support for multiple input methods: direct file upload, URL, and browser form upload
+- Comprehensive test suite with pytest and Codecov integration
+- Production-ready Docker deployment with optimized settings
 - Proper separation of concerns with a modular architecture
 
 ## Project Structure
@@ -91,6 +93,21 @@ Once the application is running, access the interactive API documentation:
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
 
+The API provides three main endpoints for extracting tables of contents:
+
+1. `/api/v1/toc/extract` - Upload a PDF file directly
+2. `/api/v1/toc/extract-from-url` - Process a PDF from a URL
+3. `/api/v1/toc/extract-from-browser` - Upload from browser forms (optimized for multipart/form-data)
+
+Example curl command for browser uploads:
+```bash
+curl -X POST "http://localhost:8000/api/v1/toc/extract-from-browser" \
+  -H "accept: application/json" \
+  -F "file=@your_file.pdf" \
+  -F "filename=your_file.pdf" \
+  -F "max_pages=10"
+```
+
 ## Usage Example
 
 ### Extracting a TOC from a PDF
@@ -138,21 +155,30 @@ pytest tests/utils/
 - OpenAI API key
 
 ### Environment Configuration
-Create a `.env` file in the project root with the following variables:
+The Docker configuration expects environment variables for the API key and other settings. These can be provided in two ways:
+
+1. **Environment variables in docker-compose.yml**:
+```yaml
+environment:
+  - OPENAI_API_KEY=your_api_key_here
+  - OPENAI_MODEL=gpt-4.1-mini
+  - PDF_MAX_PAGES=10
+  - DEFAULT_THREAD_COUNT=4
+  - LOG_LEVEL=warning
+```
+
+2. **Command line when running Docker**:
 ```bash
-PORT=8000
-APP_VERSION=1.0.0
-OPENAI_API_KEY=your_openai_api_key_here
-OPENAI_MODEL=gpt-4.1-mini
+OPENAI_API_KEY=your_api_key_here sudo -E docker compose up
 ```
 
 ### Building the Docker Image
 ```bash
 # Build the image
-docker build -t ai_toc_builder:latest .
+docker compose build
 
-# Build with a specific tag
-docker build -t ai_toc_builder:1.0.0 .
+# Or manually
+docker build -t joakimanimate90/ai_based_toc_builder:latest .
 ```
 
 ### Running with Docker Compose
@@ -161,41 +187,63 @@ docker build -t ai_toc_builder:1.0.0 .
 Development mode mounts your local code directory, enabling live code reload:
 ```bash
 # Start the service in development mode
-docker-compose up
+docker compose up
 
 # Run in detached mode
-docker-compose up -d
+docker compose up -d
 ```
 
 #### Production Mode
-For production deployment with no code mounting:
+For production deployment:
 ```bash
-# Create a docker-compose.prod.yml file with no volume mounts for app code
-# Then run:
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Build and run with optimized settings
+docker compose up --build -d
+
+# With explicit API key
+OPENAI_API_KEY=your_api_key_here sudo -E docker compose up -d
 ```
+
+The production configuration in the Dockerfile includes:
+- Multiple worker processes for better performance
+- Optimized logging settings
+- Proper proxy header handling
+- Security improvements with non-root user
 
 ### Container Management
 
 #### View Logs
 ```bash
 # View logs
-docker-compose logs
+docker compose logs
 
 # Follow logs
-docker-compose logs -f app
+docker compose logs -f app
 
 # Show only the last 100 lines
-docker-compose logs --tail=100 app
+docker compose logs --tail=100 app
 ```
 
 #### Execute Commands Inside Container
 ```bash
 # Open a shell
-docker-compose exec app bash
+docker compose exec app bash
 
 # Run a one-off command
-docker-compose exec app python -m pytest
+docker compose exec app python -m pytest
+```
+
+#### Using Version Tags
+You can create and use version tags for your image:
+
+```bash
+# Create a git tag
+git tag v1.0.0
+git push origin v1.0.0
+
+# This will trigger the CI/CD workflow to build and push a tagged Docker image
+# You can then run a specific version:
+docker pull joakimanimate90/ai_based_toc_builder:v1.0.0
+docker run -e OPENAI_API_KEY=your_key joakimanimate90/ai_based_toc_builder:v1.0.0
 ```
 
 #### Rebuild After Code Changes
