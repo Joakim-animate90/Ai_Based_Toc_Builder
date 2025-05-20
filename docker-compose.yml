@@ -5,11 +5,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ai_toc_builder:${APP_VERSION:-latest}
-    container_name: ai_toc_builder
+    image: ai_based_toc_builder:${APP_VERSION:-latest}
+    container_name: ai_based_toc_builder
     restart: unless-stopped
-    env_file:
-      - .env
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=gpt-4.1-mini
+      - PDF_MAX_PAGES=10
+      - DEFAULT_THREAD_COUNT=4
+      - LOG_LEVEL=warning
     volumes:
       # Mount code for development live reload
       - ./app:/app/app:ro

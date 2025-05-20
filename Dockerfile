@@ -69,9 +69,16 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 EXPOSE 8000
 
 # Add metadata
-LABEL maintainer="AI-Based TOC Builder Team" \
+LABEL maintainer="Joakim Bwire" \
       version="1.0.0" \
       description="AI-based table of contents extraction service"
 
-# Command to run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Set default environment variables
+ENV OPENAI_MODEL="gpt-4.1-mini" \
+    PDF_MAX_PAGES=5 \
+    DEFAULT_THREAD_COUNT=4 \
+    PORT=8000 \
+    LOG_LEVEL=warning
+
+# Command to run the application in production mode
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--proxy-headers", "--no-access-log", "--log-level", "warning"]
