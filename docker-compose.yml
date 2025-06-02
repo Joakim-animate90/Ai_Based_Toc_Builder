@@ -19,6 +19,8 @@ services:
       - ./app:/app/app:ro
       # Mount PDF files for processing
       - ./pdf_files:/app/pdf_files:ro
+      # Mount prompt.json for dynamic prompt updates
+      - ./prompt.json:/app/prompt.json
     ports:
       - "${PORT:-8000}:8000"
     healthcheck:

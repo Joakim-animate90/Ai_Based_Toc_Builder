@@ -236,11 +236,12 @@ async def extract_toc_from_browser(
             pdf_content, filename, request.output_file, request.max_pages
         )
 
-        # Simply return the content as-is without trying to parse it
-        # Just ensure it's in a format acceptable for the TOCResponse model
-        if not isinstance(toc_content, (str, dict, list)):
-            # Convert to string if not already a string, dict or list
-            toc_content = str(toc_content)
+        # If toc_content is a string, try to parse it as JSON for proper structure
+        if isinstance(toc_content, str):
+            try:
+                toc_content = json.loads(toc_content)
+            except Exception:
+                pass  # If parsing fails, leave as string
 
         return TOCResponse(
             success=True, toc_content=toc_content, output_file=output_file
