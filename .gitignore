@@ -96,3 +96,4 @@ tmp/
 secrets.json
 settings.json
 *_secret*
+.qodo

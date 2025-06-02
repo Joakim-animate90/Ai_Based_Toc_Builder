@@ -52,35 +52,12 @@ class OpenAIService:
         print(f"Processing {len(base64_images)} pages in a single batch...")
 
         # Prepare content for the multi-page request
-        content = [
-            {
-                "type": "text",
-                "text": f"Extract the complete Table of Contents information from these {len(base64_images)} PDF pages. "
-                "The pages are provided in order. "
-                "Format your response as a valid JSON with the following structure:\n\n"
-                "```json\n"
-                "{\n"
-                '  "toc_entries": [\n'
-                "    {\n"
-                '      "case_number": "string",\n'
-                '      "case_id": "string",\n'
-                '      "plaintiff": "string",\n'
-                '      "defendant": "string",\n'
-                '      "page_number": "string",\n'
-                '      "raw_text": "Full original text as it appears in the document"\n'
-                "    }\n"
-                "  ],\n"
-                '  "section_headers": ["Juzgado de lo Social Número X de Santa Cruz de Tenerife", "Other sections"]\n'
-                "}\n"
-                "```\n\n"
-                "Requirements:\n"
-                "1. Extract ONLY what is actually visible in the images\n"
-                "2. Maintain exact case numbers, party names, and page numbers\n"
-                "3. Format ALL your output as a single, parseable JSON object\n"
-                "4. Combine information from all pages into one comprehensive TOC\n"
-                "5. If there is no TOC information in any of the pages, return empty arrays",
-            }
-        ]
+        with open("prompt.json", "r", encoding="utf-8") as f:
+            content = json.load(f)
+        # Inject the correct number of pages into the prompt text
+        content[0]["text"] = content[0]["text"].replace(
+            "{len(base64_images)}", str(len(base64_images))
+        )
 
         # Add all images to the content array
         for i, base64_image in enumerate(base64_images):

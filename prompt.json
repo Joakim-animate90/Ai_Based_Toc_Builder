@@ -1,0 +1,6 @@
+[
+  {
+    "type": "text",
+    "text": "Extract the complete Table of Contents information from these {len(base64_images)} PDF pages.\nThe pages are provided in order.\nFormat your response as a valid JSON with the following structure:\n\n```json\n{\n  \\\"toc_entries\\\": [\n    {\n      \\\"case_number\\\": \\\"string\\\",\n      \\\"case_id\\\": \\\"string\\\",\n      \\\"plaintiff\\\": \\\"string\\\",\n      \\\"defendant\\\": \\\"string\\\",\n      \\\"page_number\\\": \\\"string\\\",\n      \\\"section_header\\\": \\\"string\\\",  // e.g., \\\"III. ADMINISTRACIÓN LOCAL\\\" (must start with a Roman numeral and be uppercase)\n      \\\"raw_text\\\": \\\"Full original text as it appears in the document\\\"\n    }\n  ]\n}\n```\n\nRequirements:\n1. Extract ONLY what is actually visible in the images\n2. Maintain exact case numbers, party names, and page numbers\n3. For each entry, include its corresponding section_header. Section headers must start with a Roman numeral (e.g., \\\"III.\\\") and be in uppercase, exactly as they appear in the document.\n4. Format ALL your output as a single, parseable JSON object\n5. Combine information from all pages into one comprehensive TOC\n6. If there is no TOC information in any of the pages, return an empty toc_entries array"
+  }
+]
