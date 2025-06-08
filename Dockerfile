@@ -55,6 +55,9 @@ COPY --from=builder /opt/venv /opt/venv
 # Copy application code
 COPY --chown=appuser:appuser . .
 
+# Ensure all files in /app are owned by appuser
+RUN chown -R appuser:appuser /app
+
 # Create directory for TOC outputs with proper permissions
 RUN mkdir -p toc && chown -R appuser:appuser toc
 

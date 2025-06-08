@@ -15,7 +15,7 @@ An intelligent, scalable API for extracting tables of contents from PDF document
 - Comprehensive test suite with pytest and Codecov integration
 - Production-ready Docker deployment with optimized settings
 - Proper separation of concerns with a modular architecture
-- **Automatic periodic cleanup of old database records:** The app now uses FastAPI's modern lifespan event to run a background task that deletes records older than a configurable threshold (default: 60 minutes) every minute, leveraging the new time-based deletion method in OpenAIDB for efficient storage management.
+- **Automatic periodic cleanup of old database records:** The app now uses FastAPI's modern lifespan event to run a background task that deletes records older than a configurable threshold (default: 15 minutes) every minute, leveraging the new time-based deletion method in OpenAIDB for efficient storage management.
 
 ## Project Structure
 

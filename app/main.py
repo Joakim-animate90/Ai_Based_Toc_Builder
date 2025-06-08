@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
 
     # Start periodic cleanup task
     db = OpenAIDB()
-    cleanup_interval_seconds = 15
+    cleanup_interval_seconds = 60
     record_age_minutes = 15  # Delete records older than 60 minutes
 
     async def periodic_cleanup():
