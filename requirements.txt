@@ -40,3 +40,5 @@ passlib[bcrypt]==1.7.4
 # Documentation
 mkdocs==1.5.3
 mkdocs-material==9.4.7
+
+# Task Queue

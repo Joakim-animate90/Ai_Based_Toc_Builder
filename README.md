@@ -15,6 +15,7 @@ An intelligent, scalable API for extracting tables of contents from PDF document
 - Comprehensive test suite with pytest and Codecov integration
 - Production-ready Docker deployment with optimized settings
 - Proper separation of concerns with a modular architecture
+- **Automatic periodic cleanup of old database records:** The app now uses FastAPI's modern lifespan event to run a background task that deletes records older than a configurable threshold (default: 60 minutes) every minute, leveraging the new time-based deletion method in OpenAIDB for efficient storage management.
 
 ## Project Structure
 
@@ -93,11 +94,29 @@ Once the application is running, access the interactive API documentation:
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
 
-The API provides three main endpoints for extracting tables of contents:
+The API provides several endpoints for extracting tables of contents and managing asynchronous PDF processing:
 
 1. `/api/v1/toc/extract` - Upload a PDF file directly
 2. `/api/v1/toc/extract-from-url` - Process a PDF from a URL
 3. `/api/v1/toc/extract-from-browser` - Upload from browser forms (optimized for multipart/form-data)
+4. **`POST /api/v1/toc/pdf-processing-jobs`** - Asynchronous PDF processing. Submit a PDF for async processing and receive a ticket immediately. Use the ticket to poll for status/result.
+5. **`GET /api/v1/toc/status/{ticket_id}`** - Check the status and result of an asynchronous PDF processing request using the ticket id.
+
+**Example: Asynchronous PDF Processing**
+
+Submit a PDF for async processing:
+```bash
+curl -X POST "http://localhost:8000/api/v1/toc/pdf-processing-jobs" \
+  -H "accept: application/json" \
+  -F "file=@your_file.pdf" \
+  -F "max_pages=10"
+```
+
+Poll for status/result:
+```bash
+curl -X GET "http://localhost:8000/api/v1/toc/status/{ticket_id}" \
+  -H "accept: application/json"
+```
 
 Example curl command for browser uploads:
 ```bash

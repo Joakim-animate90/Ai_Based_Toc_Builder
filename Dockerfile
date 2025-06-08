@@ -58,6 +58,9 @@ COPY --chown=appuser:appuser . .
 # Create directory for TOC outputs with proper permissions
 RUN mkdir -p toc && chown -R appuser:appuser toc
 
+# Ensure the SQLite DB file exists and is owned by appuser
+RUN touch open_ai_db.sqlite && chown appuser:appuser open_ai_db.sqlite
+
 # Switch to non-root user
 USER appuser
 
@@ -78,7 +81,8 @@ ENV OPENAI_MODEL="gpt-4.1-mini" \
     PDF_MAX_PAGES=5 \
     DEFAULT_THREAD_COUNT=4 \
     PORT=8000 \
-    LOG_LEVEL=warning
+    LOG_LEVEL=warning \
+    OPENAI_DB_PATH="open_ai_db.sqlite"
 
 # Command to run the application in production mode
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--proxy-headers", "--no-access-log", "--log-level", "warning"]

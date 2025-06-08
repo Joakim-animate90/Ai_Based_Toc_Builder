@@ -14,6 +14,7 @@ services:
       - PDF_MAX_PAGES=10
       - DEFAULT_THREAD_COUNT=4
       - LOG_LEVEL=warning
+      - OPENAI_DB_PATH=${OPENAI_DB_PATH}
     volumes:
       # Mount code for development live reload
       - ./app:/app/app:ro

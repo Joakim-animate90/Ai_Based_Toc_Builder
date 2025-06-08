@@ -2,6 +2,7 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from typing import Dict, List
+import asyncio
 
 import uvicorn
 from fastapi import FastAPI, Request, status
@@ -11,6 +12,7 @@ from fastapi.exceptions import RequestValidationError
 
 from app.api.v1.api import api_router
 from app.core.config import settings
+from app.repository.open_ai_db import OpenAIDB
 
 # Configure logging
 logging.basicConfig(
@@ -29,12 +31,34 @@ async def lifespan(app: FastAPI):
     # Startup operations
     logger.info("Starting up the TOC Builder API")
 
-    # Add any startup initialization here, like DB connections
+    # Start periodic cleanup task
+    db = OpenAIDB()
+    cleanup_interval_seconds = 15
+    record_age_minutes = 15  # Delete records older than 60 minutes
+
+    async def periodic_cleanup():
+        while True:
+            try:
+                deleted = db.delete_older_than_minutes(record_age_minutes)
+                logger.info(f"Periodic cleanup: deleted {deleted} old records.")
+            except Exception as e:
+                logger.error(f"Error during periodic cleanup: {e}")
+            await asyncio.sleep(cleanup_interval_seconds)
+
+    cleanup_task = asyncio.create_task(periodic_cleanup())
+    app.state.cleanup_task = cleanup_task
 
     yield  # This is where the app runs
 
     # Shutdown operations
     logger.info("Shutting down the TOC Builder API")
+
+    # Cancel periodic cleanup task
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        logger.info("Periodic cleanup task cancelled.")
 
     # Add any cleanup operations here, like closing DB connections
 
