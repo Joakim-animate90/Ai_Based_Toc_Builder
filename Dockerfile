@@ -85,7 +85,9 @@ ENV OPENAI_MODEL="gpt-4.1-mini" \
     DEFAULT_THREAD_COUNT=4 \
     PORT=8000 \
     LOG_LEVEL=warning \
-    OPENAI_DB_PATH="open_ai_db.sqlite"
+    OPENAI_DB_PATH="open_ai_db.sqlite" \
+    RECORD_AGE_MINUTES=180
+    
 
 # Command to run the application in production mode
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--proxy-headers", "--no-access-log", "--log-level", "warning"]

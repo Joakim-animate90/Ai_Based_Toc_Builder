@@ -3,6 +3,7 @@ import time
 from contextlib import asynccontextmanager
 from typing import Dict, List
 import asyncio
+import os
 
 import uvicorn
 from fastapi import FastAPI, Request, status
@@ -33,8 +34,8 @@ async def lifespan(app: FastAPI):
 
     # Start periodic cleanup task
     db = OpenAIDB()
-    cleanup_interval_seconds = 60
-    record_age_minutes = 15  # Delete records older than 60 minutes
+    cleanup_interval_seconds = int(os.environ.get("CLEANUP_INTERVAL_SECONDS", 60))
+    record_age_minutes = int(os.environ.get("RECORD_AGE_MINUTES", 180))  # Delete records older than specified minutes
 
     async def periodic_cleanup():
         while True:

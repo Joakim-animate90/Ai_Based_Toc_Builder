@@ -15,6 +15,7 @@ services:
       - DEFAULT_THREAD_COUNT=4
       - LOG_LEVEL=warning
       - OPENAI_DB_PATH=${OPENAI_DB_PATH}
+      - RECORD_AGE_MINUTES=${RECORD_AGE_MINUTES}
     volumes:
       # Mount code for development live reload
       - ./app:/app/app:ro
